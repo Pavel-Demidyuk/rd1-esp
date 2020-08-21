@@ -1,0 +1,27 @@
+0. raspberry
+	- register new devices
+	- validate list of registered devices (dummy message)
+
+1. esp master
+	- broadcast messages
+	- convey messages to rpi
+
+2. esp slave
+	- register
+	- receive messages
+		* if message is for this node: 
+			# execute message and broadcast status
+		* else
+			# broadcast message
+	- report status periodically
+	
+	
+	
+questions:
+1. -- time sync? - for what? -- skip
+2. message format
+3. how to communicate to rpi
+			
+	
+	
+	
