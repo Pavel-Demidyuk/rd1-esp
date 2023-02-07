@@ -1,0 +1,47 @@
+esphome:
+  name: seti
+  # includes:
+  #   - custom_sensor
+
+esp32:
+  board: esp-wrover-kit
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO0_IN
+  phy_addr: 1
+  power_pin: GPIO16
+  # Optional manual IP
+  manual_ip:
+    static_ip: 192.168.0.88
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "Nf0xJbgPEPT/+7OggPdlBi6O2YA+CRnOu6kx/dJ48Y8="
+
+ota:
+  password: "e2a376c8782fd57c126375678261db77"
+i2c:
+  sda: GPIO2
+  scl: GPIO4
+
+pcf8574:
+  - id: "pcf8574_hub"
+    address: 0x27
+    pcf8575: false
+# sensor:
+#   - platform: custom
+#     lambda: |-
+#       auto my_sensor = new MyCustomSensor();
+#       App.register_component(my_sensor);
+#       return {my_sensor};
+
+#     sensors:
+#       name: "My Custom Sensor"
