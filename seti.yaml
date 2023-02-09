@@ -1,5 +1,7 @@
 esphome:
   name: seti
+  libraries:
+    - paulstoffregen/OneWire@^2.3.7
   includes:
     - custom_sensor
 
