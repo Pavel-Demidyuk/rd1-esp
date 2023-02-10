@@ -1,6 +1,6 @@
 #include "esphome.h"
 #include <OneWire.h>
-#define POLLING_INTERVAL    2500
+#define POLLING_INTERVAL    5000
 #define DS2413_ACCESS_READ  0xF5
 #define DS2413_ACCESS_WRITE 0x5A
 #define DS2413_ACK_SUCCESS  0xAA
@@ -77,7 +77,9 @@ class Rd1Switch : public PollingComponent, public Switch {
       res += hex_lookup[addr[i] >> 4];
       res += hex_lookup[addr[i] & 0x0f];
     }
-    
+
+    // std::transform(switch_addr.begin(), switch_addr.end(), switch_addr.begin(), to_lower);
+
     return res;     
   }
 
@@ -91,22 +93,27 @@ class Rd1Switch : public PollingComponent, public Switch {
   /*
     Getting accessory by string address
   */
-  byte* getAcc(std::string inputAddr) {
-    byte addr[8];
-    net.reset_search();
+  byte* findAcc(std::string inputAddr) {
+    this->log("Looking for match");
+    byte addr[8];    
+    net.reset_search();    
     std::string tmpAddr;
     while(net.search(addr)) {
-      ESP_LOGD("getAcc", "found some device");
+      ESP_LOGD("getAcc", "found some device");      
       tmpAddr = this->getAccAddrStr(addr, 7);
+      
        if (tmpAddr == inputAddr){
-          ESP_LOGD("", "Found device by addr: ");
-          ESP_LOGD("", inputAddr.c_str());
+          ESP_LOGD("", "!!!!!!!Found device by addr: !!!!!!!");
+          // ESP_LOGD("", inputAddr.c_str());
           return addr;
        }
        else {
            ESP_LOGD("", tmpAddr.c_str());
        }
+      
     }
+     return addr;
+    
     ESP_LOGD("", "Can't find device by address: ");
     ESP_LOGD("", inputAddr.c_str());
     // while (1);
@@ -151,10 +158,11 @@ class Rd1Switch : public PollingComponent, public Switch {
     // publish_state(state);
   }
   void update() override {
+    // return;
     ESP_LOGD("", "update");
     ESP_LOGD("TAG", "Sensor addr: %s", this->sensorAddr.c_str());
-    byte* result = this->getAcc(this->sensorAddr);
-    printAddr(result);
+    byte* result = this->findAcc(this->sensorAddr);
+    // printAddr(result);
 
 
 
