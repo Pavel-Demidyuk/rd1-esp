@@ -58,11 +58,13 @@ ota:
 switch:
   - platform: custom
     lambda: |-
-      auto rd1_switch = new Rd1Switch("AAAAAA", "BBBBBB", true);
-      App.register_component(rd1_switch);
-      return {rd1_switch};
+      auto rd1Switch = new Rd1Switch("12.9506E1000000/B", "12.056FCF000000/B");
+      rd1Switch->bis(true);
+      rd1Switch->invert(false);
+      App.register_component(rd1Switch);
+      return {rd1Switch};
     switches:
-      - name: "rd1 switch"
+      - name: "Свет 1"
         
 # interval:
 #   - interval: 1sec
