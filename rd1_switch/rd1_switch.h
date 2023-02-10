@@ -72,9 +72,12 @@ class Rd1Switch : public PollingComponent, public Switch {
   
   std::string getAccAddrStr(const uint8_t* addr, const uint8_t count) {
     std::string res = "";
+    const char hex_lookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
     for (uint8_t i = 0; i < count; i++) {
-      res += std::string(addr[i]>>4, HEX) + std::string(addr[i]&0x0f, HEX);
+      res += hex_lookup[addr[i] >> 4];
+      res += hex_lookup[addr[i] & 0x0f];
     }
+    
     return res;     
   }
 
