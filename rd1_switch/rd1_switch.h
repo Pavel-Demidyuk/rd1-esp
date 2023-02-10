@@ -13,14 +13,13 @@ void PrintBytes(const uint8_t* addr, uint8_t count, bool newline=false) {
      
     // hexString1 = String(addr[i]>>4, HEX);
     // hexString2 = String(addr[i]&0x0f, HEX);
-    // ESP_LOGD("", hexString1.c_str());
     // ESP_LOGD("", hexString2.c_str());
      
   }
-    ESP_LOGD("", res.c_str());
+    ESP_LOGD("custom", res.c_str());
     // ESP_LOGD("", hexString2.c_str());
-  // if (newline)
-  //   Serial.println();
+    // ESP_LOGD("", hexString2.c_str());
+     
 }
 
 void lookWire() {
@@ -66,20 +65,61 @@ void lookWire() {
   Serial.println(buf[3], BIN);
 }
 
-class MyCustomSensor : public PollingComponent, public Sensor {
+class Rd1Switch : public PollingComponent, public Switch {
+ private:
+  String switch_addr;
+  String sensor_addr;
+  bool bis;
+  
  public:
-  // constructor
-  MyCustomSensor() : PollingComponent(POLLING_INTERVAL) {}
-
+   Rd1Switch(String switch_addr, String sensor_addr, bool bis) : PollingComponent(POLLING_INTERVAL) {
+    this->switch_addr = switch_addr;
+    this->sensor_addr = sensor_addr;
+    this->bis = bis;
+      ESP_LOGD("custom", "!!!!!!!!!!!!!!!!!!construct!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+   }
   float get_setup_priority() const override { return esphome::setup_priority::HARDWARE; }
-
+  // constructor
+  // Rd1Switch() : Switch() {}
   void setup() override {
-    ESP_LOGD("custom", "1111111");
+    ESP_LOGD("custom", "!!!!!!!!!!!!!!!!!!setup!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     // This will be called by App.setup()
+    // pinMode(5, INPUT);
+  }
+  void write_state(bool state) override {
+    ESP_LOGD("custom", "!!!!!!!!!!!!!!!!!!write!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    // This will be called every time the user requests a state change.
+
+    // digitalWrite(5, state);
+
+    // Acknowledge new state by publishing it
+    // publish_state(state);
   }
   void update() override {
-    lookWire();
-    ESP_LOGD("custom", "222222");
+     ESP_LOGD("custom", this->switch_addr.c_str(), this->sensor_addr.c_str(), this->bis);
+     ESP_LOGD("custom", this->sensor_addr.c_str());
+     ESP_LOGD("custom", this->bis ? "true" : "false");
+    //  ESP_LOGD("update", "!!!!!!!!!!!!!!!!!!write!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     // This will be called every "update_interval" milliseconds.
   }
 };
+
+
+
+// class Rd1Switch : public Component, public Switch {
+//  public:
+//   // constructor
+//   Rd1Switch() : PollingComponent(POLLING_INTERVAL) {}
+
+//   float get_setup_priority() const override { return esphome::setup_priority::HARDWARE; }
+
+//   void setup() override {
+//     ESP_LOGD("custom", "1111111");
+//     // This will be called by App.setup()
+//   }
+//   void update() override {
+//     lookWire();
+//     ESP_LOGD("custom", "222222");
+//     // This will be called every "update_interval" milliseconds.
+//   }
+// };

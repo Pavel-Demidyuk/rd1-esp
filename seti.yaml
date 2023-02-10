@@ -3,7 +3,7 @@ esphome:
   libraries:
     - paulstoffregen/OneWire@^2.3.7
   includes:
-    - custom_sensor
+    - rd1_switch
 
 esp32:
   board: esp-wrover-kit
@@ -40,12 +40,33 @@ ota:
 #   - id: "pcf8574_hub"
 #     address: 0x27
 #     pcf8575: false
-sensor:
+# switch - /12.9506E1000000/PIO.B
+# sensor - /12.056FCF000000/sensed.B
+
+# sensor:
+#   - platform: custom
+   
+#     lambda: |-
+#       auto my_sensor = new MyCustomSensor();
+#       App.register_component(my_sensor);
+#       return {my_sensor};
+#     sensors:
+#       name: "My Custom Sensor"
+      
+    
+
+switch:
   - platform: custom
     lambda: |-
-      auto my_sensor = new MyCustomSensor();
-      App.register_component(my_sensor);
-      return {my_sensor};
-  
-    sensors:
-      name: "My Custom Sensor"
+      auto rd1_switch = new Rd1Switch("AAAAAA", "BBBBBB", true);
+      App.register_component(rd1_switch);
+      return {rd1_switch};
+    switches:
+      - name: "rd1 switch"
+        
+# interval:
+#   - interval: 1sec
+#     then:
+#       -  lambda: |-
+#             auto ptr = rd1_switch_id.Component;
+#             static_cast<Rd1Switch*>(ptr)->poll();
