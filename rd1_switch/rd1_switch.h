@@ -78,7 +78,7 @@ class Rd1Switch : public PollingComponent, public Switch {
       res += hex_lookup[addr[i] & 0x0f];
     }
 
-    // std::transform(switch_addr.begin(), switch_addr.end(), switch_addr.begin(), to_lower);
+    std::transform(res.begin(), res.end(), res.begin(), to_lower);
 
     return res;     
   }
