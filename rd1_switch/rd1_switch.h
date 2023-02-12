@@ -62,30 +62,22 @@ class Rd1Switch : public PollingComponent, public Switch {
     return false;
   }
 
-  /*
-    Read
-  */
-  byte read(byte addr[8])
-  {		
-    bool ok = false;
-    uint8_t results;
-
+  void readDS2413(byte addr[8], byte data[2]) {
     net.reset();
-    ESP_LOGD("", "About to read");
-    this->printAddr(addr);
-    return results;
     net.select(addr);
-  
-    net.write(DS2413_ACCESS_READ);
+    net.write(0xF5, 1); // Read PIO Registers command
+    for (byte i = 0; i < 2; i++) {
+      data[i] = net.read();
+    }
+  }
 
-    results = net.read();                 /* Get the register results   */
-    ok = (!results & 0x0F) == (results >> 4); /* Compare nibbles            */
-    results &= 0x0F;                          /* Clear inverted values      */
-
+  void writeDS2413(byte addr[8], byte data[2]) {
     net.reset();
-    
-    // return ok ? results : -1;
-    return results;
+    net.select(addr);
+    net.write(0x5A, 1); // Write to PIO Registers command
+    net.write(data[0], 1);
+    net.write(data[1], 1);
+    delay(10);
   }
 
   int i = 0;
@@ -135,13 +127,15 @@ class Rd1Switch : public PollingComponent, public Switch {
     }
     if (this->i >= 5){
       if (this->i %2 == 0) {
-        this->log("read")
-        byte res = this->read(addr);
-        ESP_LOGD("", "%d", res);
+        this->log("read");
+        byte data[2];
+        this->readDS2413(addr,data);
+        ESP_LOGD("", "PIOA: %d", data[0]);
+        ESP_LOGD("", "PIOB: %d", data[1]);
       }
-      else {
-        this.write(addr, val)
-      }     
+      // else {
+      //   this.write(addr, val)
+      // }     
     }    
   }
 };
