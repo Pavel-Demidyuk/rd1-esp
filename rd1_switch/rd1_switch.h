@@ -12,50 +12,6 @@ char to_lower(char c)
 {
     return tolower(c);
 }
-// using namespace std;
-
-
-// void lookWire() {
-//    byte addr[8];
-
-//   if (!net.search(addr)) {
-//     ESP_LOGD("custom", "No more addresses.\n");
-//     net.reset_search();
-//     return;
-//   }
-
-//   if (OneWire::crc8(addr, 7) != addr[7]) {
-//     ESP_LOGD("custom", "CRC is not valid!\n");
-//     return;
-//   }
-
-//   if (addr[0] != 0x29) {
-//     PrintBytes(addr, 8);
-//     ESP_LOGD("custom", " is not a DS2408.\n");
-//     return;
-//   }
-//   ESP_LOGD("custom", "  Reading DS2408 ");
-//   PrintBytes(addr, 8);
-//   Serial.println();
-
-//   uint8_t buf[13];  // Put everything in the buffer so we can compute CRC easily.
-//   buf[0] = 0xF0;    // Read PIO Registers
-//   buf[1] = 0x88;    // LSB address
-//   buf[2] = 0x00;    // MSB address
-//   net.write_bytes(buf, 3);
-//   net.read_bytes(buf+3, 10);     // 3 cmd bytes, 6 data bytes, 2 0xFF, 2 CRC16
-//   net.reset();
-
-//   if (!OneWire::check_crc16(buf, 11, &buf[11])) {
-//     ESP_LOGD("custom", "CRC failure in DS2408 at ");
-//     PrintBytes(addr, 8, true);
-//     return;
-//   }
-//   ESP_LOGD("custom", "  DS2408 data = ");
-//   // First 3 bytes contain command, register address.
-//   // ESP_LOGD("custom", "  DS2408 data = ");
-//   Serial.println(buf[3], BIN);
-// }
 
 class Rd1Switch : public PollingComponent, public Switch {
  private:
@@ -93,31 +49,46 @@ class Rd1Switch : public PollingComponent, public Switch {
   /*
     Getting accessory by string address
   */
-  byte* findAcc(std::string inputAddr) {
-    this->log("Looking for match");
-    byte addr[8];    
+  bool findAcc(std::string inputAddr, byte addr[8]) {
     net.reset_search();    
     std::string tmpAddr;
     while(net.search(addr)) {
       ESP_LOGD("getAcc", "found some device");      
       tmpAddr = this->getAccAddrStr(addr, 7);
-      
        if (tmpAddr == inputAddr){
-          ESP_LOGD("", "!!!!!!!Found device by addr: !!!!!!!");
-          // ESP_LOGD("", inputAddr.c_str());
-          return addr;
+          return true;
        }
-       else {
-           ESP_LOGD("", tmpAddr.c_str());
-       }
-      
     }
-     return addr;
-    
-    ESP_LOGD("", "Can't find device by address: ");
-    ESP_LOGD("", inputAddr.c_str());
-    // while (1);
+    return false;
   }
+
+  /*
+    Read
+  */
+  byte read(byte addr[8])
+  {		
+    bool ok = false;
+    uint8_t results;
+
+    net.reset();
+    ESP_LOGD("", "About to read");
+    this->printAddr(addr);
+    return results;
+    net.select(addr);
+  
+    net.write(DS2413_ACCESS_READ);
+
+    results = net.read();                 /* Get the register results   */
+    ok = (!results & 0x0F) == (results >> 4); /* Compare nibbles            */
+    results &= 0x0F;                          /* Clear inverted values      */
+
+    net.reset();
+    
+    // return ok ? results : -1;
+    return results;
+  }
+
+  int i = 0;
 
  public:
   Rd1Switch(std::string switch_addr, std::string sensor_addr) : PollingComponent(POLLING_INTERVAL) {
@@ -148,75 +119,29 @@ class Rd1Switch : public PollingComponent, public Switch {
   void setup() override {
     
   }
+
   void write_state(bool state) override {
     ESP_LOGD("custom", "!!!!!!!!!!!!!!!!!!write!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    // This will be called every time the user requests a state change.
-
-    // digitalWrite(5, state);
-
-    // Acknowledge new state by publishing it
-    // publish_state(state);
+    publish_state(state);
   }
+
   void update() override {
-    // return;
-    ESP_LOGD("", "update");
-    ESP_LOGD("TAG", "Sensor addr: %s", this->sensorAddr.c_str());
-    byte* result = this->findAcc(this->sensorAddr);
-    // printAddr(result);
-
-
-
-
-    // this->log(this->convertInputAddr(this->switch_addr));
-    // this->printAddr(this->switch_addr);
-    // 12.9506E1000000
-    // 129506e100000081
-    // 129506E1000000
-    // 129506e1000000
-    // byte addr[8];
-    // net.reset_search();
-    // while(net.search(addr)) {
-    //    if ()getAccAddr(addr, 7);
-    // }
-
-    // if (!net.search(addr)) {
-    //   ESP_LOGD("custom", "No more addresses.\n");
-    //   net.reset_search();
-    //   return;
-    // }
-
-    // if (OneWire::crc8(addr, 7) != addr[7]) {
-    //   ESP_LOGD("custom", "CRC is not valid!\n");
-    //   return;
-    // }
-
-    // if (addr[0] != 0x29) {
-    //   PrintBytes(addr, 8);
-    //   ESP_LOGD("custom", " is not a DS2408.\n");
-    //   return;
-    // }
-    // ESP_LOGD("custom", "  Reading DS2408 ");
-    // PrintBytes(addr, 7);
-    // Serial.println();
+    this->i++;
+    ESP_LOGD("", "%d", this->i);
+    byte addr[8];  
+    if (!this->findAcc(this->sensorAddr, addr)) {
+      ESP_LOGE("", "Can't find sensor by addr %s", this->sensorAddr);
+      return;
+    }
+    if (this->i >= 5){
+      if (this->i %2 == 0) {
+        this->log("read")
+        byte res = this->read(addr);
+        ESP_LOGD("", "%d", res);
+      }
+      else {
+        this.write(addr, val)
+      }     
+    }    
   }
 };
-
-
-
-// class Rd1Switch : public Component, public Switch {
-//  public:
-//   // constructor
-//   Rd1Switch() : PollingComponent(POLLING_INTERVAL) {}
-
-//   float get_setup_priority() const override { return esphome::setup_priority::HARDWARE; }
-
-//   void setup() override {
-//     ESP_LOGD("custom", "1111111");
-//     // This will be called by App.setup()
-//   }
-//   void update() override {
-//     lookWire();
-//     ESP_LOGD("custom", "222222");
-//     // This will be called every "update_interval" milliseconds.
-//   }
-// };
