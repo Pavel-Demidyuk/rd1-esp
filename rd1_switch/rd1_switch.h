@@ -52,11 +52,19 @@ class Rd1Switch : public PollingComponent, public Switch {
     Getting accessory by string address
   */
   bool findAcc(std::string inputAddr, byte addr[8]) {
+    net.reset();
     net.reset_search();  
     delay(10);  
     std::string tmpAddr;
     while(net.search(addr)) {
       delay(10);
+      if (OneWire::crc8(addr, 7) != addr[7]) {
+        ESP_LOGD("getAcc", "DEVICE IS BROKEN");      
+        return false;
+      }
+      else {
+         ESP_LOGI("getAcc", "DEVICE IS OK");     
+      }
       return true;
       ESP_LOGD("getAcc", "found some device");      
       tmpAddr = this->getAccAddrStr(addr, 7);
@@ -67,17 +75,28 @@ class Rd1Switch : public PollingComponent, public Switch {
     return false;
   }
 
-  void readDS2413(byte addr[8], byte data[2]) {
+  byte readDS2413(uint8_t* deviceaddress) {
+    bool ok = false;
+    uint8_t results;
     net.reset();
-    delay(10);
-    net.select(addr);
-    delay(10);
-    net.write(0xF5); // Read PIO Registers command
-    delay(10);
-    for (byte i = 0; i < 2; i++) {
-      data[i] = net.read();
-      delay(10);
+    net.select(deviceaddress);
+    net.write(0xF5);     
+    results = net.read();
+    ok = (~results & 0x0F) == (results >> 4);
+    if (!ok) {
+      this->log("NOT OK!!");
     }
+    else {
+      this->log("OK!!!!");
+    }
+    results &= 0x0F;                         
+    net.reset();
+    return results;
+
+    // for (byte i = 0; i < 2; i++) {
+    //   data[i] = net.read();
+    //   delay(10);
+    // }
   }
 
   void writeDS2413(byte addr[8], byte data[2]) {
@@ -138,25 +157,34 @@ class Rd1Switch : public PollingComponent, public Switch {
       this->log("______________________________________________________");   
       this->printAddr(addr);
       this->log("read");
-      byte data[2];
-      delay(10);
-      this->readDS2413(addr,data);
-      ESP_LOGD("", "PIOA: %d", data[0]);
-      ESP_LOGD("", "PIOB: %d", data[1]);
+      byte data[8];
+      int PIO_data = 0;
+      PIO_data = this->readDS2413(addr);
+      ESP_LOGD("", "RES %d", PIO_data);
+      // delay(10);
+      // ESP_LOGD("", "PIO0: %d", data[0]);
+      // ESP_LOGD("", "PIO1: %d", data[1]);
+      // ESP_LOGD("", "PIO2: %d", data[2]);
+      // ESP_LOGD("", "PIO3: %d", data[3]);
+      // ESP_LOGD("", "PIO4: %d", data[4]);
+      // ESP_LOGD("", "PIO5: %d", data[5]);
+      // ESP_LOGD("", "PIO6: %d", data[6]);
+      // ESP_LOGD("", "PIO7: %d", data[7]);
+      // ESP_LOGD("", "PIO8: %d", data[8]);
 
-      if ( data[0] == DS2413_ACK_ERROR) {
-          ESP_LOGD("", "PIOA ERROR");
-      }
-      if ( data[1] == DS2413_ACK_ERROR) {
-          ESP_LOGD("", "PIOB ERROR");
-      }
+    //   if ( data[0] == DS2413_ACK_ERROR) {
+    //       ESP_LOGD("", "PIOA ERROR");
+    //   }
+    //   if ( data[1] == DS2413_ACK_ERROR) {
+    //       ESP_LOGD("", "PIOB ERROR");
+    //   }
     
     //   data[0] ^= 0xFF;
     //   data[1] ^= 0xFF;
 
     //   this->writeDS2413(addr, data);
 
-    // // Read back to verify the write
+    // // // Read back to verify the write
     //   this->readDS2413(addr, data);
     //   ESP_LOGD("TAG", "PIOA: %d", data[0]);
     //   ESP_LOGD("TAG", "PIOB: %d", data[1]);
